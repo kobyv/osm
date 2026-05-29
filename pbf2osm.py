@@ -67,8 +67,7 @@ class Blob(message.Message):
         """Parse blob from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
@@ -97,8 +96,7 @@ class BlobHeader(message.Message):
         """Parse blob header from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
@@ -122,8 +120,7 @@ class StringTable(message.Message):
         """Parse string table from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
@@ -150,8 +147,7 @@ class PrimitiveBlock(message.Message):
         """Parse primitive block from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
@@ -193,8 +189,7 @@ class PrimitiveGroup(message.Message):
         """Parse primitive group from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
@@ -240,14 +235,12 @@ class Node(message.Message):
         """Parse node from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
-            if field_num == 1 and wire_type == 0:  # id
-                val, pos = decoder._DecodeVarint(data, pos)
-                self.id = (val >> 1) ^ -(val & 1)  # ZigZag decode
+            if field_num == 1 and wire_type == 0:  # id (int64, not sint64)
+                self.id, pos = decoder._DecodeVarint(data, pos)
             elif field_num == 2 and wire_type == 2:  # keys (packed)
                 length, pos = decoder._DecodeVarint(data, pos)
                 end_pos = pos + length
@@ -289,8 +282,7 @@ class DenseNodes(message.Message):
         """Parse dense nodes from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
@@ -298,7 +290,8 @@ class DenseNodes(message.Message):
                 length, pos = decoder._DecodeVarint(data, pos)
                 end_pos = pos + length
                 while pos < end_pos:
-                    val, pos = decoder._DecodeSignedVarint(data, pos)
+                    val, pos = decoder._DecodeVarint(data, pos)
+                    val = (val >> 1) ^ -(val & 1)  # ZigZag decode
                     self.id.append(val)
             elif field_num == 5 and wire_type == 2:  # denseinfo
                 length, pos = decoder._DecodeVarint(data, pos)
@@ -343,14 +336,12 @@ class Way(message.Message):
         """Parse way from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
-            if field_num == 1 and wire_type == 0:  # id
-                val, pos = decoder._DecodeVarint(data, pos)
-                self.id = (val >> 1) ^ -(val & 1)  # ZigZag decode
+            if field_num == 1 and wire_type == 0:  # id (int64, not sint64)
+                self.id, pos = decoder._DecodeVarint(data, pos)
             elif field_num == 2 and wire_type == 2:  # keys (packed)
                 length, pos = decoder._DecodeVarint(data, pos)
                 end_pos = pos + length
@@ -395,14 +386,12 @@ class Relation(message.Message):
         """Parse relation from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
-            if field_num == 1 and wire_type == 0:  # id
-                val, pos = decoder._DecodeVarint(data, pos)
-                self.id = (val >> 1) ^ -(val & 1)  # ZigZag decode
+            if field_num == 1 and wire_type == 0:  # id (int64, not sint64)
+                self.id, pos = decoder._DecodeVarint(data, pos)
             elif field_num == 2 and wire_type == 2:  # keys (packed)
                 length, pos = decoder._DecodeVarint(data, pos)
                 end_pos = pos + length
@@ -458,8 +447,7 @@ class Info(message.Message):
         """Parse info from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
@@ -497,8 +485,7 @@ class DenseInfo(message.Message):
         """Parse dense info from bytes."""
         pos = 0
         while pos < len(data):
-            tag_int = decoder._DecodeVarint(data, pos)[0]
-            pos = decoder._DecodeVarint(data, pos)[1]
+            tag_int, pos = decoder._DecodeVarint(data, pos)
             field_num = tag_int >> 3
             wire_type = tag_int & 7
 
@@ -592,18 +579,15 @@ def pbf_to_xml(pbf_path: Path) -> ET.Element:
     """
     from datetime import datetime, timezone
 
-    def add_metadata_to_element(elem: ET.Element, info: Info, string_table: list[str], date_granularity: int):
+    def add_metadata_to_element(elem: ET.Element, info: Info, string_table: list[str], date_scale: float):
         """Add metadata attributes from Info to XML element."""
         if info is None:
             return
         if info.version is not None:
             elem.set("version", str(info.version))
         if info.timestamp is not None:
-            # Convert timestamp (granular units since epoch) to ISO format
-            # Timestamp is in milliseconds (granularity defaults to 1000)
-            timestamp_seconds = (info.timestamp * date_granularity) / 1000.0
-            # Sanity check to avoid invalid timestamps
-            if 0 <= timestamp_seconds <= 2147483647:  # Valid Unix timestamp range
+            timestamp_seconds = info.timestamp * date_scale
+            if 0 <= timestamp_seconds <= 2147483647:
                 dt = datetime.fromtimestamp(timestamp_seconds, tz=timezone.utc)
                 elem.set("timestamp", dt.strftime("%Y-%m-%dT%H:%M:%SZ"))
         if info.changeset is not None and info.changeset != 0:
@@ -638,6 +622,12 @@ def pbf_to_xml(pbf_path: Path) -> ET.Element:
                 # Build string table
                 string_table = [s.decode("utf-8") for s in block.stringtable.s]
 
+                # Precompute per-block constants
+                coord_scale = 1e-9 * block.granularity
+                lat_origin = 1e-9 * block.lat_offset
+                lon_origin = 1e-9 * block.lon_offset
+                date_scale = block.date_granularity / 1000.0
+
                 # Process primitive groups
                 for group in block.primitivegroup:
                     # Process dense nodes
@@ -647,6 +637,9 @@ def pbf_to_xml(pbf_path: Path) -> ET.Element:
                         lat_val = 0
                         lon_val = 0
                         keys_vals_pos = 0
+                        keys_vals = dense.keys_vals
+                        keys_vals_len = len(keys_vals)
+                        denseinfo = dense.denseinfo
 
                         # Delta-decode metadata if present
                         version_val = 0
@@ -655,31 +648,31 @@ def pbf_to_xml(pbf_path: Path) -> ET.Element:
                         uid_val = 0
                         user_sid_val = 0
 
-                        for i in range(len(dense.id)):
-                            # Delta decode
-                            node_id += dense.id[i]
-                            lat_val += dense.lat[i]
-                            lon_val += dense.lon[i]
+                        dense_ids = dense.id
+                        dense_lats = dense.lat
+                        dense_lons = dense.lon
 
-                            # Convert to actual coordinates
-                            lat = 1e-9 * (block.lat_offset + (block.granularity * lat_val))
-                            lon = 1e-9 * (block.lon_offset + (block.granularity * lon_val))
+                        for i in range(len(dense_ids)):
+                            # Delta decode
+                            node_id += dense_ids[i]
+                            lat_val += dense_lats[i]
+                            lon_val += dense_lons[i]
 
                             # Create XML node
                             node_elem = ET.SubElement(root, "node")
                             node_elem.set("id", str(node_id))
-                            node_elem.set("lat", f"{lat:.7f}")
-                            node_elem.set("lon", f"{lon:.7f}")
+                            node_elem.set("lat", f"{lat_origin + coord_scale * lat_val:.7f}")
+                            node_elem.set("lon", f"{lon_origin + coord_scale * lon_val:.7f}")
 
                             # Add metadata from denseinfo if present
-                            if dense.denseinfo is not None:
-                                info = dense.denseinfo
+                            if denseinfo is not None:
+                                info = denseinfo
                                 if i < len(info.version):
                                     version_val += info.version[i]
                                     node_elem.set("version", str(version_val))
                                 if i < len(info.timestamp):
                                     timestamp_val += info.timestamp[i]
-                                    timestamp_seconds = (timestamp_val * block.date_granularity) / 1000.0
+                                    timestamp_seconds = timestamp_val * date_scale
                                     if 0 <= timestamp_seconds <= 2147483647:
                                         dt = datetime.fromtimestamp(timestamp_seconds, tz=timezone.utc)
                                         node_elem.set("timestamp", dt.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -699,12 +692,12 @@ def pbf_to_xml(pbf_path: Path) -> ET.Element:
                                             node_elem.set("user", user)
 
                             # Parse tags (keys_vals is [key1, val1, key2, val2, ..., 0])
-                            while keys_vals_pos < len(dense.keys_vals):
-                                key_id = dense.keys_vals[keys_vals_pos]
+                            while keys_vals_pos < keys_vals_len:
+                                key_id = keys_vals[keys_vals_pos]
                                 if key_id == 0:  # End of tags for this node
                                     keys_vals_pos += 1
                                     break
-                                val_id = dense.keys_vals[keys_vals_pos + 1]
+                                val_id = keys_vals[keys_vals_pos + 1]
                                 keys_vals_pos += 2
 
                                 tag = ET.SubElement(node_elem, "tag")
@@ -713,8 +706,8 @@ def pbf_to_xml(pbf_path: Path) -> ET.Element:
 
                     # Process regular nodes
                     for node in group.nodes:
-                        lat = 1e-9 * (block.lat_offset + (block.granularity * node.lat))
-                        lon = 1e-9 * (block.lon_offset + (block.granularity * node.lon))
+                        lat = lat_origin + coord_scale * node.lat
+                        lon = lon_origin + coord_scale * node.lon
 
                         node_elem = ET.SubElement(root, "node")
                         node_elem.set("id", str(node.id))
@@ -722,7 +715,7 @@ def pbf_to_xml(pbf_path: Path) -> ET.Element:
                         node_elem.set("lon", f"{lon:.7f}")
 
                         # Add metadata
-                        add_metadata_to_element(node_elem, node.info, string_table, block.date_granularity)
+                        add_metadata_to_element(node_elem, node.info, string_table, date_scale)
 
                         # Add tags
                         for i in range(len(node.keys)):
@@ -736,7 +729,7 @@ def pbf_to_xml(pbf_path: Path) -> ET.Element:
                         way_elem.set("id", str(way.id))
 
                         # Add metadata
-                        add_metadata_to_element(way_elem, way.info, string_table, block.date_granularity)
+                        add_metadata_to_element(way_elem, way.info, string_table, date_scale)
 
                         # Add node references (delta decoded)
                         node_id = 0
@@ -757,7 +750,7 @@ def pbf_to_xml(pbf_path: Path) -> ET.Element:
                         rel_elem.set("id", str(relation.id))
 
                         # Add metadata
-                        add_metadata_to_element(rel_elem, relation.info, string_table, block.date_granularity)
+                        add_metadata_to_element(rel_elem, relation.info, string_table, date_scale)
 
                         # Add members (delta decoded)
                         member_id = 0
